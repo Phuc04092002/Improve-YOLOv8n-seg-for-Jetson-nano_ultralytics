@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 # -*- coding: utf-8 -*-
 """
 Export YOLOv8-seg .pt model into ONNX
 with bounding boxes, class scores, masks included.
 """
+
 import sys
 from pathlib import Path
+
 from ultralytics import YOLO
 
 # ---------------- CONFIG ----------------
@@ -17,9 +21,11 @@ BATCH = 1
 TASK = "segment"  # task: 'detect', 'segment', 'classify', etc.
 # ----------------------------------------
 
+
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
     return p
+
 
 def main():
     export_dir = ensure_dir(Path(EXPORT_DIR))
@@ -38,14 +44,15 @@ def main():
             opset=OPSET,
             imgsz=IMGSZ,
             batch=BATCH,
-            dynamic=True,     # ONNX dynamic shape
-            optimize=True,    # fuse conv + bn nếu có
-            simplify=True     # simplify graph
+            dynamic=True,  # ONNX dynamic shape
+            optimize=True,  # fuse conv + bn nếu có
+            simplify=True,  # simplify graph
         )
         print("[✅ DONE] ONNX export completed.")
     except Exception as e:
         print("[ERROR] ONNX export failed:", e)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

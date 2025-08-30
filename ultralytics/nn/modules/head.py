@@ -18,22 +18,34 @@ from .conv import Conv, DWConv
 from .transformer import MLP, DeformableTransformerDecoder, DeformableTransformerDecoderLayer
 from .utils import bias_init_with_prob, linear_init
 
-__all__ = "Detect", "Segment", "Pose", "Classify", "OBB", "RTDETRDecoder", "v10Detect", "YOLOEDetect", "YOLOESegment","GCDetectHead"
+__all__ = (
+    "Detect",
+    "Segment",
+    "Pose",
+    "Classify",
+    "OBB",
+    "RTDETRDecoder",
+    "v10Detect",
+    "YOLOEDetect",
+    "YOLOESegment",
+    "GCDetectHead",
+)
+
 
 class GCDetectHead(nn.Module):
     def __init__(self, in_channels, num_classes, num_anchors=1, num_groups=16):
         super().__init__()
         # --- Group Conv 1 ---
-        self.group_conv1 = nn.Conv2d(in_channels, in_channels,
-                                     kernel_size=3, stride=1, padding=1,
-                                     groups=num_groups, bias=False)
+        self.group_conv1 = nn.Conv2d(
+            in_channels, in_channels, kernel_size=3, stride=1, padding=1, groups=num_groups, bias=False
+        )
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.act1 = nn.SiLU(inplace=True)
 
         # --- Group Conv 2 ---
-        self.group_conv2 = nn.Conv2d(in_channels, in_channels,
-                                     kernel_size=3, stride=1, padding=1,
-                                     groups=num_groups, bias=False)
+        self.group_conv2 = nn.Conv2d(
+            in_channels, in_channels, kernel_size=3, stride=1, padding=1, groups=num_groups, bias=False
+        )
         self.bn2 = nn.BatchNorm2d(in_channels)
         self.act2 = nn.SiLU(inplace=True)
 

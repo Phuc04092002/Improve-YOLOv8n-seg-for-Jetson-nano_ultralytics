@@ -1,6 +1,8 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import torch
-import torch.nn as nn
 import torch.quantization
+
 from ultralytics import YOLO
 
 # ==== Cấu hình ====
@@ -39,9 +41,9 @@ torch.onnx.export(
     opset_version=13,
     do_constant_folding=True,
     dynamic_axes={
-        "images": {0: "batch"},   # batch dynamic
-        "output": {0: "batch"}    # output dynamic
-    }
+        "images": {0: "batch"},  # batch dynamic
+        "output": {0: "batch"},  # output dynamic
+    },
 )
 
 print(f"🎉 Export thành công -> {onnx_output}")
