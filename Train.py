@@ -1,5 +1,9 @@
-from ultralytics import YOLO
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import os
+
+from ultralytics import YOLO
+
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 if __name__ == "__main__":
@@ -17,9 +21,8 @@ if __name__ == "__main__":
         device=0,
         name="yolov8_original_train",
         save=True,
-        save_period=1  # Lưu sau mỗi epoch
+        save_period=1,  # Lưu sau mỗi epoch
     )
 
 # Sau khi train xong có thể test hoặc predict
 #
-

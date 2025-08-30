@@ -1,3 +1,5 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import onnx
 
 onnx_model_path = "yolov8n_seg_qat_int8_real.onnx"
