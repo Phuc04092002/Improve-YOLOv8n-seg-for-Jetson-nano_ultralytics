@@ -1,0 +1,4 @@
+path: D:/new_dataset1
+train: D:/new_dataset1/images/train
+val:   D:/new_dataset1/images/val
+names: ['person', 'bicycle', 'car', 'motorcycle', 'traffic light']
