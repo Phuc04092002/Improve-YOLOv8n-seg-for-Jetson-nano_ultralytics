@@ -1,12 +1,15 @@
-from ultralytics import YOLO
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import cv2
 
+from ultralytics import YOLO
+
 img = cv2.imread("Test_file/test_image6.jpg")
-new_size = (640,640)
-resized_img = cv2.resize(img, new_size, interpolation = cv2.INTER_LINEAR)
+new_size = (640, 640)
+resized_img = cv2.resize(img, new_size, interpolation=cv2.INTER_LINEAR)
 
 model = YOLO("runs/segment/yolov8_custom_train5/weights/best.pt")
-model.predict(resized_img, save = True, imgsz = 640, conf = 0.3)
+model.predict(resized_img, save=True, imgsz=640, conf=0.3)
 
 # import cv2
 # import os

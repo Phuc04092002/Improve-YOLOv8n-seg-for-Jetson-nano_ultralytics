@@ -1,4 +1,7 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import torch
+
 from ultralytics import YOLO
 
 # load kiến trúc YOLOv8

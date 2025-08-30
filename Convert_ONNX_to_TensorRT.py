@@ -1,4 +1,7 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import os
+
 import tensorrt as trt
 
 # Thêm thư mục lib trước khi import TensorRT
@@ -10,10 +13,9 @@ TRT_LOGGER = trt.Logger(trt.Logger.INFO)
 onnx_model_path = "yolov8n_seg_qat_int8_real.onnx"
 trt_engine_path = "yolov8n_seg_qat_int8.trt"
 
-with trt.Builder(TRT_LOGGER) as builder, \
-     builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)) as network, \
-     trt.OnnxParser(network, TRT_LOGGER) as parser:
-
+with trt.Builder(TRT_LOGGER) as builder, builder.create_network(
+    1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
     # ==== BuilderConfig mới ====
     config = builder.create_builder_config()
     # Thay vì max_workspace_size dùng set_memory_pool_limit
@@ -37,6 +39,3 @@ with trt.Builder(TRT_LOGGER) as builder, \
         f.write(engine.serialize())
 
 print("✅ TensorRT engine built successfully")
-
-
-

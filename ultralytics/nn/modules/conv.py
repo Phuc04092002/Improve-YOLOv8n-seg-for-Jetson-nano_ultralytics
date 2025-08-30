@@ -7,11 +7,12 @@ from typing import List
 import numpy as np
 import torch
 import torch.nn as nn
-#_________________________________
-import torch.nn.functional as F
+
+# _________________________________
 from timm.models.fasternet import Partial_conv3
 from timm.models.layers import DropPath
-#_________________________________
+
+# _________________________________
 
 __all__ = (
     "Conv",
@@ -28,14 +29,14 @@ __all__ = (
     "Concat",
     "RepConv",
     "Index",
-    #______________________
+    # ______________________
     "My_HGStem",
     "Ghost_HGBlock",
     "PConv",
     # "FasterBlock",
     # "C2f_Faster",
     "Stem",
-    "Faster_Block"
+    "Faster_Block",
 )
 
 
@@ -46,8 +47,10 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
     if p is None:
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
-#_______________________________________________________________________________________________________________________
-import math
+
+
+# _______________________________________________________________________________________________________________________
+
 
 # def make_divisible(x, divisor=8):
 #     return math.ceil(x / divisor) * divisor
@@ -55,8 +58,8 @@ import math
 class Stem(nn.Module):
     # Stem
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
-        super(Stem, self).__init__()
-        c_ = int(c2/2)  # hidden channels
+        super().__init__()
+        c_ = int(c2 / 2)  # hidden channels
         self.cv1 = Conv(c1, c_, 3, 2)
         self.cv2 = Conv(c_, c_, 1, 1)
         self.cv3 = Conv(c_, c_, 3, 2)
@@ -66,57 +69,58 @@ class Stem(nn.Module):
     def forward(self, x):
         x = self.cv1(x)
         return self.cv4(torch.cat((self.cv3(self.cv2(x)), self.pool(x)), dim=1))
+
+
 # Tạo khối HGStem
 class My_HGStem(nn.Module):
-    def __init__(self, c1, c2, width_multiple = 1.0):
+    def __init__(self, c1, c2, width_multiple=1.0):
         super().__init__()
         # Scale channel
         # c2 = make_divisible(c2 * width_multiple, 8)
-        self.initial = nn.Sequential(
-            nn.Conv2d(c1, c2, kernel_size=1, stride=1, padding=0),
-            nn.ReLU(inplace=True)
-        )
+        self.initial = nn.Sequential(nn.Conv2d(c1, c2, kernel_size=1, stride=1, padding=0), nn.ReLU(inplace=True))
 
         self.Nhanh1 = nn.Sequential(
-            nn.Conv2d(c2,c2,kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(c2, c2, kernel_size=1, stride=1, padding=0),
             nn.ReLU(inplace=True),
-            nn.Conv2d(c2,c2,kernel_size=1, stride=1, padding=0),
-            nn.ReLU(inplace=True)
+            nn.Conv2d(c2, c2, kernel_size=1, stride=1, padding=0),
+            nn.ReLU(inplace=True),
         )
 
         self.Nhanh2 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
 
         self.Gop2Nhanh = nn.Sequential(
-            nn.Conv2d(c2*2,c2,kernel_size=1, stride=1, padding=0),
+            nn.Conv2d(c2 * 2, c2, kernel_size=1, stride=1, padding=0),
             nn.ReLU(inplace=True),
             nn.Conv2d(c2, c2, kernel_size=1, stride=1, padding=0),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
-    def forward(self,x):
+    def forward(self, x):
         x = self.initial(x)
         n1 = self.Nhanh1(x)
-        #n2 = F.pad(x, [0, 1, 0, 1]) #đảm bảo cùng kích thước
+        # n2 = F.pad(x, [0, 1, 0, 1]) #đảm bảo cùng kích thước
         n2 = self.Nhanh2(x)
         out = torch.cat([n1, n2], dim=1)
         out = self.Gop2Nhanh(out)
         return out
 
+
 # Tạo khối Ghost_HGBlock
 class Ghost_HGBlock(nn.Module):
-    def __init__(self, c1, c2,  width_multiple = 1.0):
+    def __init__(self, c1, c2, width_multiple=1.0):
         super().__init__()
         # # Scale channel
         # c1 = make_divisible(c1 * width_multiple, 8)
         # c2 = make_divisible(c2 * width_multiple, 8)
         # c1 = make_divisible(c1, 8)
         # c2 = make_divisible(c2, 8)
-        self.GhostConv1 = GhostConv(c1,c2, k=1, s=1, g=1, act=True)
-        self.GhostConv2 = GhostConv(c2,c2, k=3, s=1, g=1, act=True)
-        self.GhostConv3 = GhostConv(c2,c2, k=3, s=1, g=1, act=True)
-        self.Conv1 = Conv(c2*3, c2, k=1, s=1, p=None, g=1, d=1, act=True)
+        self.GhostConv1 = GhostConv(c1, c2, k=1, s=1, g=1, act=True)
+        self.GhostConv2 = GhostConv(c2, c2, k=3, s=1, g=1, act=True)
+        self.GhostConv3 = GhostConv(c2, c2, k=3, s=1, g=1, act=True)
+        self.Conv1 = Conv(c2 * 3, c2, k=1, s=1, p=None, g=1, d=1, act=True)
         self.Conv2 = Conv(c2, c2, k=3, s=1, p=1, g=1, d=1, act=True)
         self.DownSample = Conv(c1, c2, k=1, s=1, p=None) if c1 != c2 else nn.Identity()
+
     def forward(self, x):
         residual = self.DownSample(x)
         x = self.GhostConv1(x)
@@ -128,26 +132,27 @@ class Ghost_HGBlock(nn.Module):
         out = out + residual
         return out
 
-#Tạo khối PConv (Code của anh Quang trong video thầy gửi)
+
+# Tạo khối PConv (Code của anh Quang trong video thầy gửi)
 class PConv(nn.Module):
-    def __init__(self, dim, ouc, n_div=4, forward='split_cat'):
+    def __init__(self, dim, ouc, n_div=4, forward="split_cat"):
         super().__init__()
         self.dim_conv3 = dim // n_div
         self.dim_untouched = dim - self.dim_conv3
         self.partial_conv3 = nn.Conv2d(self.dim_conv3, self.dim_conv3, 1, 1, 1, bias=False)
         self.conv = Conv(dim, ouc, k=1)
 
-        if forward == 'slicing':
+        if forward == "slicing":
             self.forward = self.forward_slicing
-        elif forward == 'split_cat':
+        elif forward == "split_cat":
             self.forward = self.forward_split_cat
         else:
             raise NotImplementedError
 
     def forward_slicing(self, x):
         # only for inference
-        x = x.clone()   # !!! Keep the original input intact for the residual connection later
-        x[:, :self.dim_conv3, :, :] = self.partial_conv3(x[:, :self.dim_conv3, :, :])
+        x = x.clone()  # !!! Keep the original input intact for the residual connection later
+        x[:, : self.dim_conv3, :, :] = self.partial_conv3(x[:, : self.dim_conv3, :, :])
         x = self.conv(x)
         return x
 
@@ -159,7 +164,8 @@ class PConv(nn.Module):
         x = self.conv(x)
         return x
 
-#Tạo khối FasterBlock
+
+# Tạo khối FasterBlock
 # class FasterBlock(nn.Module):
 #     def __init__(self, c1, c2):
 #         super().__init__()
@@ -202,43 +208,31 @@ class PConv(nn.Module):
 #         out = self.Conv2(out)
 #         return out
 
+
 class Faster_Block(nn.Module):
-    def __init__(self,
-                 inc,
-                 dim,
-                 n_div=4,
-                 mlp_ratio=2,
-                 drop_path=0.1,
-                 layer_scale_init_value=0.0,
-                 pconv_fw_type='split_cat'
-                 ):
+    def __init__(
+        self, inc, dim, n_div=4, mlp_ratio=2, drop_path=0.1, layer_scale_init_value=0.0, pconv_fw_type="split_cat"
+    ):
         super().__init__()
         self.dim = dim
         self.mlp_ratio = mlp_ratio
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.n_div = n_div
 
         mlp_hidden_dim = int(dim * mlp_ratio)
 
-        mlp_layer = [
-            Conv(dim, mlp_hidden_dim, 1),
-            nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)
-        ]
+        mlp_layer = [Conv(dim, mlp_hidden_dim, 1), nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)]
 
         self.mlp = nn.Sequential(*mlp_layer)
 
-        self.spatial_mixing = Partial_conv3(
-            dim,
-            n_div,
-            pconv_fw_type
-        )
+        self.spatial_mixing = Partial_conv3(dim, n_div, pconv_fw_type)
 
         self.adjust_channel = None
         if inc != dim:
             self.adjust_channel = Conv(inc, dim, 1)
 
         if layer_scale_init_value > 0:
-            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
             self.forward = self.forward_layer_scale
         else:
             self.forward = self.forward
@@ -254,12 +248,11 @@ class Faster_Block(nn.Module):
     def forward_layer_scale(self, x):
         shortcut = x
         x = self.spatial_mixing(x)
-        x = shortcut + self.drop_path(
-            self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x))
+        x = shortcut + self.drop_path(self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x))
         return x
 
-#_______________________________________________________________________________________________________________________
 
+# _______________________________________________________________________________________________________________________
 
 
 class Conv(nn.Module):

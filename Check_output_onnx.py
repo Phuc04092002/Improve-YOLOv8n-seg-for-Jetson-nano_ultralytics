@@ -1,5 +1,7 @@
-import onnxruntime as ort
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import numpy as np
+import onnxruntime as ort
 
 ONNX_MODEL_PATH = r"runs/segment/yolov8_custom_train5/weights/best.onnx"
 session = ort.InferenceSession(ONNX_MODEL_PATH)

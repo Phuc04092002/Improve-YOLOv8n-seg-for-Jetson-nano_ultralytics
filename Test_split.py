@@ -1,3 +1,5 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import os
 import random
 import shutil
@@ -22,14 +24,14 @@ os.makedirs(new_label_train_dir, exist_ok=True)
 
 # Gom ảnh theo class
 class_to_images = defaultdict(list)
-all_images = [f for f in os.listdir(image_train_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+all_images = [f for f in os.listdir(image_train_dir) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
 
 for img_file in all_images:
     label_file = os.path.splitext(img_file)[0] + ".txt"
     src_label = os.path.join(label_train_dir, label_file)
 
     if os.path.exists(src_label) and os.path.getsize(src_label) > 0:
-        with open(src_label, "r", encoding="utf-8") as f:
+        with open(src_label, encoding="utf-8") as f:
             lines = [line.strip() for line in f.readlines()]
             if not lines:
                 continue
@@ -74,7 +76,7 @@ for img_file in selected_images:
     dst_label = os.path.join(new_label_train_dir, label_file)
 
     # Lọc nhãn
-    with open(src_label, "r", encoding="utf-8") as f:
+    with open(src_label, encoding="utf-8") as f:
         lines = [line.strip() for line in f.readlines() if line.strip()]
         lines = [line for line in lines if int(line.split()[0]) in target_classes]
 
@@ -83,4 +85,3 @@ for img_file in selected_images:
             fw.write("\n".join(lines))
 
 print(f"✅ Đã copy {len(selected_images)} mẫu (cân bằng class) sang {new_base_dir}")
-
