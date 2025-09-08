@@ -70,22 +70,23 @@ from .conv import (
     ConvTranspose,
     DWConv,
     DWConvTranspose2d,
+    Faster_Block,
     Focus,
+    Ghost_HGBlock,
     GhostConv,
     Index,
     LightConv,
+    My_HGStem,
+    PConv,
     RepConv,
     SpatialAttention,
-    My_HGStem,
-    Ghost_HGBlock,
-    PConv,
     Stem,
-    Faster_Block
 )
 from .head import (
     OBB,
     Classify,
     Detect,
+    GCDetectHead,
     LRPCHead,
     Pose,
     RTDETRDecoder,
@@ -94,7 +95,6 @@ from .head import (
     YOLOEDetect,
     YOLOESegment,
     v10Detect,
-    GCDetectHead
 )
 from .transformer import (
     AIFI,
@@ -194,5 +194,4 @@ __all__ = (
     "Stem",
     "GCDetectHead",
     "Faster_Block",
-
 )

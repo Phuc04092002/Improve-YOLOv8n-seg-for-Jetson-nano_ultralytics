@@ -30,6 +30,7 @@ from ultralytics.nn.modules import (
     Bottleneck,
     BottleneckCSP,
     C2f,
+    # FasterBlock,
     C2fAttn,
     C2fCIB,
     C2fPSA,
@@ -68,13 +69,6 @@ from ultralytics.nn.modules import (
     YOLOEDetect,
     YOLOESegment,
     v10Detect,
-    My_HGStem,
-    Ghost_HGBlock,
-    PConv,
-    # FasterBlock,
-    C2f_Faster,
-    Stem,
-    GCDetectHead
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
