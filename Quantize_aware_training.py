@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 # -*- coding: utf-8 -*-
 """
 Robust QAT (FX-like) script for YOLOv8-seg — fixed prepare_qat signature handling.
-Edit CONFIG at top then run: python Quantize_aware_training.py
+Edit CONFIG at top then run: python Quantize_aware_training.py.
 """
+
+import inspect
 import os
 import re
 import sys
-import inspect
 from pathlib import Path
 
 import torch
 import torch.nn as nn
+
 from ultralytics import YOLO
+
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # help FX by wrapping builtins that often break tracing
 import torch.fx
+
 for _fn in ("len", "list", "tuple", "range", "zip", "map"):
     try:
         torch.fx.wrap(_fn)
@@ -31,10 +37,11 @@ API_MODE = None
 
 try:
     # fx API (older)
-    from torch.ao.quantization.fx import prepare_qat_fx as _prepare_qat_fx
-    from torch.ao.quantization.fx import convert_fx as _convert_fx
-    from torch.ao.quantization.fx import QConfigMapping as QConfigMapping_fx
     from torch.ao.quantization import get_default_qat_qconfig as _gdq_fx
+    from torch.ao.quantization.fx import QConfigMapping as QConfigMapping_fx
+    from torch.ao.quantization.fx import convert_fx as _convert_fx
+    from torch.ao.quantization.fx import prepare_qat_fx as _prepare_qat_fx
+
     _prepare_qat_fn = _prepare_qat_fx
     _convert_fn = _convert_fx
     QConfigMapping = QConfigMapping_fx
@@ -43,10 +50,11 @@ try:
 except Exception:
     try:
         # new API
-        from torch.ao.quantization import prepare_qat as _prepare_qat_new
         from torch.ao.quantization import convert as _convert_new
-        from torch.ao.quantization.qconfig_mapping import QConfigMapping as QConfigMapping_new
         from torch.ao.quantization import get_default_qat_qconfig as _gdq_new
+        from torch.ao.quantization import prepare_qat as _prepare_qat_new
+        from torch.ao.quantization.qconfig_mapping import QConfigMapping as QConfigMapping_new
+
         _prepare_qat_fn = _prepare_qat_new
         _convert_fn = _convert_new
         QConfigMapping = QConfigMapping_new
@@ -61,7 +69,7 @@ if API_MODE is None:
 # ------------------------- CONFIG -------------------------
 MODEL_PATH = r"runs/segment/yolov8_custom_train5/weights/best.pt"
 DATA_ROOT = r"D:/new_dataset1"
-BACKEND = "fbgemm"        # "fbgemm" (x86) or "qnnpack" (ARM/Jetson)
+BACKEND = "fbgemm"  # "fbgemm" (x86) or "qnnpack" (ARM/Jetson)
 IMGSZ = 640
 EPOCHS = 12
 BATCH = 16
@@ -69,15 +77,17 @@ LR0 = 1e-3
 DEVICE = "0"
 WORKERS = 4
 EXCLUDE_UPSAMPLE = True
-EXCLUDE_REGEX = None      # e.g. r"seg|mask|p3"
+EXCLUDE_REGEX = None  # e.g. r"seg|mask|p3"
 EXPORT_ONNX = True
 CONVERT_INT8_PTH = True
 OUTDIR = "qat_outputs_fixed_v3"
 # ----------------------------------------------------------
 
+
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
     return p
+
 
 def patch_inplace_activations(m: nn.Module):
     for mod in m.modules():
@@ -87,12 +97,13 @@ def patch_inplace_activations(m: nn.Module):
             except Exception:
                 pass
 
+
 def write_data_yaml(path_yaml: Path, data_root: Path, names):
     data_root = data_root.resolve()
     lines = [
         f"path: {data_root.as_posix()}",
-        f"train: { (data_root/'images'/'train').as_posix() }",
-        f"val:   { (data_root/'images'/'val').as_posix() }",
+        f"train: {(data_root / 'images' / 'train').as_posix()}",
+        f"val:   {(data_root / 'images' / 'val').as_posix()}",
     ]
     if isinstance(names, dict):
         names_list = [names[k] for k in sorted(names.keys(), key=lambda x: int(x))]
@@ -103,6 +114,7 @@ def write_data_yaml(path_yaml: Path, data_root: Path, names):
     lines.append(f"names: {names_list}")
     path_yaml.write_text("\n".join(lines), encoding="utf-8")
     return path_yaml
+
 
 def get_core_nnmodule(yolo_obj):
     cand = getattr(yolo_obj, "model", None)
@@ -135,6 +147,7 @@ def get_core_nnmodule(yolo_obj):
         raise RuntimeError(f"Discovered core is not nn.Module: {type(core)}")
     return core
 
+
 def build_qconfig_mapping_fx_like(backend: str, exclude_upsample: bool, exclude_regex: str, core: nn.Module):
     qcfg = get_default_qat_qconfig(backend)
     mapping = QConfigMapping().set_global(qcfg)
@@ -146,6 +159,7 @@ def build_qconfig_mapping_fx_like(backend: str, exclude_upsample: bool, exclude_
             if pattern.search(name):
                 mapping = mapping.set_module_name(name, None)
     return mapping
+
 
 def apply_qconfig_new_api(backend: str, exclude_upsample: bool, exclude_regex: str, core: nn.Module):
     qcfg = get_default_qat_qconfig(backend)
@@ -161,6 +175,7 @@ def apply_qconfig_new_api(backend: str, exclude_upsample: bool, exclude_regex: s
                 module.qconfig = None
     return qcfg
 
+
 def call_prepare_qat_dynamic(prepare_fn, model_module, qconfig_mapping_obj, example_inputs):
     """
     Call prepare_qat / prepare_qat_fx robustly across different torch versions
@@ -168,7 +183,7 @@ def call_prepare_qat_dynamic(prepare_fn, model_module, qconfig_mapping_obj, exam
     - prepare_fn: function object (could be prepare_qat_fx or prepare_qat)
     - model_module: core nn.Module (must already be in train() if required)
     - qconfig_mapping_obj: QConfigMapping instance or None (for new API)
-    - example_inputs: tuple or None
+    - example_inputs: tuple or None.
     """
     sig = inspect.signature(prepare_fn)
     params = sig.parameters
@@ -198,8 +213,9 @@ def call_prepare_qat_dynamic(prepare_fn, model_module, qconfig_mapping_obj, exam
                 return prepare_fn(model_module, example_inputs)
             else:
                 return prepare_fn(model_module)
-        except Exception as e:
+        except Exception:
             raise
+
 
 def main():
     outdir = ensure_dir(Path(OUTDIR))
@@ -239,7 +255,9 @@ def main():
 
     model_qat_core = None
     if API_MODE == "fx":
-        qconfig_mapping = build_qconfig_mapping_fx_like(torch.backends.quantized.engine, EXCLUDE_UPSAMPLE, EXCLUDE_REGEX, core)
+        qconfig_mapping = build_qconfig_mapping_fx_like(
+            torch.backends.quantized.engine, EXCLUDE_UPSAMPLE, EXCLUDE_REGEX, core
+        )
         core.train()
         try:
             model_qat_core = call_prepare_qat_dynamic(_prepare_qat_fn, core, qconfig_mapping, example_inputs)
@@ -278,15 +296,7 @@ def main():
 
     # fine-tune with ultralytics trainer
     print("[INFO] Starting QAT fine-tune (Ultralytics trainer)...")
-    yolo.train(
-        data=str(data_yaml),
-        epochs=EPOCHS,
-        imgsz=IMGSZ,
-        lr0=LR0,
-        batch=BATCH,
-        workers=WORKERS,
-        device=DEVICE
-    )
+    yolo.train(data=str(data_yaml), epochs=EPOCHS, imgsz=IMGSZ, lr0=LR0, batch=BATCH, workers=WORKERS, device=DEVICE)
 
     # retrieve trained core
     trained_core = None
@@ -334,11 +344,13 @@ def main():
         dummy = torch.randn(1, 3, IMGSZ, IMGSZ)
         try:
             torch.onnx.export(
-                model_qat_trained, dummy, onnx_path.as_posix(),
+                model_qat_trained,
+                dummy,
+                onnx_path.as_posix(),
                 opset_version=13,
                 input_names=["images"],
                 output_names=["output"],
-                dynamic_axes={"images": {0: "batch"}}
+                dynamic_axes={"images": {0: "batch"}},
             )
             print("[INFO] ONNX exported:", onnx_path)
         except Exception as e:
@@ -346,6 +358,6 @@ def main():
 
     print("\n[✅ DONE] QAT flow finished. Outputs in:", outdir)
 
+
 if __name__ == "__main__":
     main()
-
