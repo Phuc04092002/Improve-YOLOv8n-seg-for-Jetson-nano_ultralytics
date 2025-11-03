@@ -1,5 +1,9 @@
-import cv2
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import time
+
+import cv2
+
 from ultralytics import YOLO
 
 # Load model
@@ -31,10 +35,10 @@ while True:
     fps = 1 / (end_time - start_time)
 
     # Hiển thị tốc độ & FPS lên ảnh
-    cv2.putText(annotated_frame, f"Inference: {inference_time:.1f} ms", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-    cv2.putText(annotated_frame, f"FPS: {fps:.1f}", (10, 60),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+    cv2.putText(
+        annotated_frame, f"Inference: {inference_time:.1f} ms", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2
+    )
+    cv2.putText(annotated_frame, f"FPS: {fps:.1f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
     # Hiển thị khung hình
     cv2.imshow("YOLOv8 Segmentation - Camera", annotated_frame)
