@@ -1,7 +1,9 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import os
 import random
 import shutil
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 
 # ==== Cấu hình ====
 base_dir = "D:/coco"
@@ -9,7 +11,7 @@ new_base_dir = "D:/new_dataset1"
 num_samples = 6000  # tối thiểu số ảnh
 target_classes = [0, 1, 2, 3, 9]
 # mapping gốc -> mới
-class_remap = {0:0, 1:1, 2:2, 3:3, 9:4}
+class_remap = {0: 0, 1: 1, 2: 2, 3: 3, 9: 4}
 
 
 image_train_dir = os.path.join(base_dir, "images", "train2017")
@@ -24,7 +26,7 @@ os.makedirs(new_label_train_dir, exist_ok=True)
 image_to_objects = {}
 class_to_images = defaultdict(set)
 
-all_images = [f for f in os.listdir(image_train_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+all_images = [f for f in os.listdir(image_train_dir) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
 
 for img_file in all_images:
     label_file = os.path.splitext(img_file)[0] + ".txt"
@@ -33,7 +35,7 @@ for img_file in all_images:
         continue
 
     obj_counts = Counter()
-    with open(src_label, "r", encoding="utf-8") as f:
+    with open(src_label, encoding="utf-8") as f:
         for line in f:
             parts = line.strip().split()
             if not parts:
@@ -84,7 +86,7 @@ for img_file in selected_images:
     src_label = os.path.join(label_train_dir, os.path.splitext(img_file)[0] + ".txt")
     dst_label = os.path.join(new_label_train_dir, os.path.splitext(img_file)[0] + ".txt")
 
-    with open(src_label, "r", encoding="utf-8") as f:
+    with open(src_label, encoding="utf-8") as f:
         lines = []
         for line in f:
             parts = line.strip().split()
@@ -92,7 +94,7 @@ for img_file in selected_images:
                 continue
             old_cls = int(parts[0])
             if old_cls in target_classes:
-                new_cls = class_remap[old_cls]   # remap sang id mới
+                new_cls = class_remap[old_cls]  # remap sang id mới
                 parts[0] = str(new_cls)
                 lines.append(" ".join(parts))
 
@@ -102,4 +104,3 @@ for img_file in selected_images:
 
 
 print(f"✅ Đã tạo dataset với {len(selected_images)} ảnh, object phân bố: {dict(object_counter)}")
-

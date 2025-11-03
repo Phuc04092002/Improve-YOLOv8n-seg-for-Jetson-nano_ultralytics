@@ -1,3 +1,5 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import os
 import random
 import shutil
@@ -14,7 +16,7 @@ for split in splits:
     os.makedirs(os.path.join(base_dir, "labels", split), exist_ok=True)
 
 # Lấy danh sách ảnh
-all_images = [f for f in os.listdir(image_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+all_images = [f for f in os.listdir(image_dir) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
 all_images.sort()  # để cố định thứ tự
 
 # Shuffle để random
@@ -24,12 +26,13 @@ random.shuffle(all_images)
 # Chia theo tỉ lệ 8/1/1
 n_total = len(all_images)
 n_train = int(0.8 * n_total)
-n_val   = int(0.1 * n_total)
-n_test  = n_total - n_train - n_val
+n_val = int(0.1 * n_total)
+n_test = n_total - n_train - n_val
 
 train_files = all_images[:n_train]
-val_files   = all_images[n_train:n_train+n_val]
-test_files  = all_images[n_train+n_val:]
+val_files = all_images[n_train : n_train + n_val]
+test_files = all_images[n_train + n_val :]
+
 
 def copy_files(file_list, split):
     for img_file in file_list:
@@ -44,6 +47,7 @@ def copy_files(file_list, split):
         dst_label = os.path.join(base_dir, "labels", split, label_file)
         if os.path.exists(src_label):  # đề phòng thiếu nhãn
             shutil.copy(src_label, dst_label)
+
 
 # Copy dữ liệu
 copy_files(train_files, "train")
