@@ -1,7 +1,10 @@
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
+import os
+
 import cv2
 import numpy as np
 import onnxruntime as ort
-import os
 
 # ============ CONFIG ============
 onnx_path = "runs/segment/yolov8_custom_train5/weights/best.onnx"
@@ -11,14 +14,14 @@ conf_thres = 0.3
 iou_thres = 0.5
 
 # Class names (chỉnh theo dataset của bạn)
-class_names = ['person', 'bicycle', 'car', 'motorcycle','traffic light']
+class_names = ["person", "bicycle", "car", "motorcycle", "traffic light"]
 # colors = [tuple(np.random.randint(0, 255, 3).tolist()) for _ in range(len(class_names))]
 colors = [
-    (0, 255, 0),    # person
-    (255, 0, 0),    # bicycle
-    (0, 0, 255),    # car
+    (0, 255, 0),  # person
+    (255, 0, 0),  # bicycle
+    (0, 0, 255),  # car
     (255, 255, 0),  # motorcycle
-    (0, 255, 255)   # traffic light
+    (0, 255, 255),  # traffic light
 ]
 
 # color = colors[class_names % len(colors)]
@@ -26,7 +29,7 @@ colors = [
 
 # ============ UTILS ============
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114)):
-    """Resize + pad để giữ nguyên tỉ lệ giống YOLOv8"""
+    """Resize + pad để giữ nguyên tỉ lệ giống YOLOv8."""
     shape = im.shape[:2]  # h,w
     r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
     new_unpad = (int(round(shape[1] * r)), int(round(shape[0] * r)))
@@ -40,8 +43,9 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114)):
     im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)
     return im, r, (dw, dh)
 
+
 def scale_boxes(boxes, r, dwdh, img0_shape):
-    """Scale boxes từ letterbox về ảnh gốc"""
+    """Scale boxes từ letterbox về ảnh gốc."""
     boxes[:, [0, 2]] -= dwdh[0]  # x padding
     boxes[:, [1, 3]] -= dwdh[1]  # y padding
     boxes[:, :4] /= r
@@ -49,10 +53,11 @@ def scale_boxes(boxes, r, dwdh, img0_shape):
     boxes[:, 1::2] = boxes[:, 1::2].clip(0, img0_shape[0])
     return boxes
 
+
 def process_mask(proto, masks_in, boxes, img_shape):
     c, mh, mw = proto.shape
-    masks = masks_in @ proto.reshape(c, -1)      # (n, mh*mw)
-    masks = masks.reshape(-1, mh, mw)            # (n, mh, mw)
+    masks = masks_in @ proto.reshape(c, -1)  # (n, mh*mw)
+    masks = masks.reshape(-1, mh, mw)  # (n, mh, mw)
     # resize mask về ảnh letterbox
     masks = np.array([cv2.resize(m, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_LINEAR) for m in masks])
     # (n,h,w)
@@ -64,6 +69,7 @@ def process_mask(proto, masks_in, boxes, img_shape):
         crop_mask[y1:y2, x1:x2] = m[y1:y2, x1:x2] > 0.5
         final_masks.append(crop_mask)
     return np.stack(final_masks, axis=0)
+
 
 # ============ LOAD MODEL ============
 session = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
@@ -129,8 +135,7 @@ for img_name in os.listdir(test_folder):
             if label_y < 0:
                 label_y = y2 + 4
             cv2.rectangle(img_out, (x1, label_y), (x1 + tw + 4, label_y + th), color, -1)
-            cv2.putText(img_out, label, (x1 + 2, label_y + th - 2),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            cv2.putText(img_out, label, (x1 + 2, label_y + th - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
             # Mask
             colored_mask = np.zeros_like(img_out, dtype=np.uint8)
