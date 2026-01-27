@@ -1,9 +1,11 @@
-import tensorrt as trt
-import pycuda.driver as cuda
-import pycuda.autoinit
-import numpy as np
-import cv2
+# Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+
 import time
+
+import cv2
+import numpy as np
+import pycuda.driver as cuda
+import tensorrt as trt
 
 # ====== Config ======
 engine_path = "qat_model_fixed.engine"
@@ -23,7 +25,7 @@ context = engine.create_execution_context()
 img0 = cv2.imread(img_path)
 img = cv2.resize(img0, (img_size, img_size))
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-img = img.transpose(2,0,1)[None].astype(np.float32) / 255.0
+img = img.transpose(2, 0, 1)[None].astype(np.float32) / 255.0
 
 # ====== Allocate GPU memory ======
 inputs, outputs, bindings = [], [], []
@@ -51,7 +53,7 @@ context.execute_v2(bindings)
 stream.synchronize()
 t2 = time.time()
 
-print(f"Inference time: {(t2-t1)*1000:.2f} ms")
+print(f"Inference time: {(t2 - t1) * 1000:.2f} ms")
 
 # Copy outputs back
 for out in outputs:
